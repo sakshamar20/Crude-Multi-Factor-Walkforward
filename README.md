@@ -2,29 +2,29 @@
 
 A systematic trading strategy for **Brent Crude Oil (CO1 Comdty)** that dynamically selects the best-performing signal each quarter using a walkforward backtesting framework. The strategy combines momentum, moving-average crossover, and U.S. Dollar Index signals with volatility-scaled position sizing and risk management overlays.
 
+> **Disclaimer:** The strategy logic, hypothesis generation, and research direction were independently developed by the author. AI assistance was utilized for code generation and syntax correction.
+
 ---
 
-## Performance Summary
+## 1. Performance Summary
+
+The strategy demonstrates robust out-of-sample performance, significantly outperforming a buy-and-hold approach.
 
 | Metric | Value |
-|---|---|
+| :--- | :--- |
 | **Sharpe Ratio** | 1.11 |
 | **Total Return** | 242.29% |
 | **Annualized Return** | 15.50% |
 | **Max Drawdown** | -16.80% |
 
-### Performance Charts
+### Equity Curve vs Drawdown
 
-| | |
-| :--- | :--- |
-| ![Equity Curve](equity_curve.png) | ![Drawdown](drawdown.png) |
-| ![Price Trends](price_trends.png) | ![Stop Loss Sensitivity](stoploss_sensitivity.png) |
-| ![Seasonality Heatmap](seasonality_heatmap.png) | ![Return Distribution](return_distribution.png) |
-| ![ACF Plot](acf_plot.png) | |
+![Equity Curve](equity_curve.png)
+![Drawdown](drawdown.png)
 
 ---
 
-## How It Works
+## 2. How It Works
 
 The notebook (`learn.ipynb`) walks through the entire research process from EDA to final strategy. Here's the high-level flow:
 
@@ -55,23 +55,41 @@ graph TD
 | Lookback Period | 12 months |
 | Rebalance Frequency | Quarterly |
 
----
+### Sensitivity Analysis
 
-## Key Findings from EDA
+The stop-loss threshold of -3% was selected based on a sensitivity sweep. Tighter stops (>-2%) caused excessive churn, while looser stops (<-5%) failed to protect against tail risk.
 
-- **Autocorrelation:** No significant daily return autocorrelation, so short-lookback strategies (1D, 5D, 10D) were dropped.
-- **Volatility Clustering:** Extreme clustering confirmed the need for volatility-scaled position sizing.
-- **Fat Tails:** Negative skew and high kurtosis justified the use of stop losses.
-- **Mean Reversion:** Didn't work for crude oil (it's just the negation of momentum, no independent information).
-- **Seasonality:** No reliable monthly pattern found in 8 years of data.
-- **DXY Signal:** Dollar index strategies contributed ~47% of the strategy's active time, providing genuine cross-asset diversification.
-- **EIA Inventories:** Weak signal, not strong enough for standalone daily trading.
-
-For the full analysis, see the [Strategy Report](Strategy_Report.md).
+![Stop Loss Sensitivity](stoploss_sensitivity.png)
 
 ---
 
-## Project Structure
+## 3. Key Findings from EDA
+
+Before building strategies, we analyzed the statistical properties of Brent Crude returns to inform our design.
+
+### Price Trends & Volatility
+Crude oil exhibits strong trending behavior but also extreme volatility clustering. This justifies the use of trend-following signals combined with volatility-scaled position sizing.
+
+![Price Trends](price_trends.png)
+
+### Autocorrelation
+We found **no significant daily return autocorrelation** at any lag. This means short-lookback strategies (1D, 5D, 10D) trade on noise, not signal. We dropped them in favor of longer-term trend following.
+
+![ACF Plot](acf_plot.png)
+
+### Seasonality
+Contrary to popular belief, we found **no reliable monthly seasonal pattern** in the 8-year dataset. The strategy therefore does not use calendar-based signals.
+
+![Seasonality Heatmap](seasonality_heatmap.png)
+
+### Return Distribution
+The return distribution has **negative skew** and **high kurtosis** (fat tails), meaning crashes are more frequent and severe than rallies. This validated the need for a hard stop loss.
+
+![Return Distribution](return_distribution.png)
+
+---
+
+## 4. Project Structure
 
 | File | Description |
 | :--- | :--- |
@@ -81,16 +99,12 @@ For the full analysis, see the [Strategy Report](Strategy_Report.md).
 | `psw01.xls` | EIA Weekly Petroleum Status Report (inventory data). |
 | `Strategy_Report.md` | Detailed research report documenting methodology and findings. |
 | `requirements.txt` | Python dependencies. |
-| `equity_curve.png` | Exported equity curve chart. |
-| `drawdown.png` | Exported drawdown chart. |
-| `stoploss_sensitivity.png` | Exported stop-loss sensitivity chart. |
-| `equity_curve.csv` | Daily portfolio cumulative returns. |
 
 ---
 
-## Quick Start
+## 5. Quick Start
 
-### 1. Set up the environment
+### Set up the environment
 
 ```bash
 python3 -m venv .venv
@@ -98,19 +112,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Run the notebook
+### Run the notebook
 
-Open `learn.ipynb` in Jupyter or VS Code and run all cells.
-
----
-
-## Future Improvements
-
-- [ ] Term structure signal (contango/backwardation)
-- [ ] WTI-Brent spread (inter-commodity arbitrage)
-- [ ] VIX-based regime filtering (risk-on/risk-off)
-- [ ] Grid search optimization for stop loss, min hold, and vol target
-- [ ] Multi-asset expansion (WTI, Natural Gas, Heating Oil)
+Open `learn.ipynb` in Jupyter or VS Code to reproduce the analysis.
 
 ---
 
