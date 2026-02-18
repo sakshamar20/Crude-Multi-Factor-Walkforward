@@ -1,8 +1,0 @@
-total_return=104.45%
-ann_return=11.64%
-ann_vol=8.33%
-sharpe=1.40
-max_dd=-11.49%
-calmar=1.01
-win_rate=38.97%
-profit_factor=1.36
