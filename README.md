@@ -74,7 +74,7 @@ pip install -r requirements.txt
 
 ### Run the notebook
 
-Open `learn.ipynb` in Jupyter or VS Code to reproduce the analysis.
+Open `strategy.ipynb` in Jupyter or VS Code to reproduce the analysis.
 
 ---
 
