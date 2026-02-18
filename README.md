@@ -53,7 +53,7 @@ The notebook (`Strategy.ipynb`) walks through the entire research process from E
 
 | File                   | Description                                                           |
 | :--------------------- | :-------------------------------------------------------------------- |
-| `learn.ipynb`        | Main notebook: EDA, strategy construction, backtesting, and analysis. |
+| `Strategy.ipynb`     | Main notebook: EDA, strategy construction, backtesting, and analysis. |
 | `brent_index.xlsx`   | Brent Crude Oil front-month futures price data.                       |
 | `dxy.csv`            | U.S. Dollar Index (DTWEXBGS) data from FRED.                          |
 | `psw01.xls`          | EIA Weekly Petroleum Status Report (inventory data).                  |
@@ -74,12 +74,10 @@ pip install -r requirements.txt
 
 ### Run the notebook
 
-Open strategy.ipynb in Jupyter or VS Code to reproduce the analysis.
+Open Strategy.ipynb in Jupyter or VS Code to reproduce the analysis.
 
 ---
 
 ## License
 
 This project is for educational and research purposes.
-
-
