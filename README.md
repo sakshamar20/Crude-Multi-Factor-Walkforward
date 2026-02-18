@@ -1,6 +1,8 @@
-# Crude Multi-Factor Walkforward Strategy
+# Crude Oil Multi-Factor Walkforward Strategy
 
-A quantitative trading strategy for **Brent Crude Oil** that combines multiple alpha signals with walkforward optimization, Top-N strategy ensembling, volatility scaling, and regime-aware filtering.
+A systematic trading strategy for **Brent Crude Oil (CO1 Comdty)** that dynamically selects the best-performing signal each quarter using a walkforward backtesting framework. The strategy combines momentum, moving-average crossover, and U.S. Dollar Index signals with volatility-scaled position sizing and risk management overlays.
+
+> **Disclaimer:** The strategy logic, hypothesis generation, and research direction were independently developed by the author. AI assistance was used for code generation and syntax correction.
 
 ---
 
@@ -8,123 +10,120 @@ A quantitative trading strategy for **Brent Crude Oil** that combines multiple a
 
 | Metric | Value |
 |---|---|
-| **Annualized Return** | 11.64% |
-| **Annualized Sharpe Ratio** | 1.40 |
-| **Max Drawdown** | -11.49% |
-| **Calmar Ratio** | 1.01 |
-| **Total Return** | 104.45% |
-| **Win Rate** | 38.97% |
-| **Profit Factor** | 1.36 |
+| **Sharpe Ratio** | 1.11 |
+| **Total Return** | 242.29% |
+| **Annualized Return** | 15.50% |
+| **Max Drawdown** | -16.80% |
+
+### Performance Charts
+| | |
+|---|---|
+| ![Equity Curve](equity_curve.png) | ![Drawdown](drawdown.png) |
+| ![Price Trends](price_trends.png) | ![Stop Loss Sensitivity](stoploss_sensitivity.png) |
+| ![Seasonality Heatmap](seasonality_heatmap.png) | ![Return Distribution](return_distribution.png) |
+| ![ACF Plot](acf_plot.png) | |
 
 ---
 
-## Performance Charts
+## How It Works
 
-### Cumulative Returns
-![Cumulative Returns](images/cumulative_returns.png)
+The notebook (`learn.ipynb`) walks through the entire research process from EDA to final strategy. Here's the high-level flow:
 
-### Drawdown
-![Drawdown](images/drawdown.png)
-
-### Rolling 6-Month Sharpe Ratio
-![Rolling Sharpe](images/rolling_sharpe.png)
-
-### Ensemble Portfolio vs Individual Strategies
-![Ensemble vs Individual](images/ensemble_vs_individual.png)
-
----
-
-## Strategy Overview
-
-The system evaluates **26 individual strategies** across 6 signal families, then uses a **walkforward backtester** to select and ensemble the Top-3 performers every quarter.
+```
+Raw Price Data (Brent Crude, DXY)
+        |
+        v
+   14 Trading Strategies
+   (Momentum, MA Crossover, DXY-based)
+        |
+        v
+   Risk Management Overlays
+   - Volatility scaling (15% vol target)
+   - Minimum holding period (10 days)
+   - Stop loss (-3%)
+        |
+        v
+   Walkforward Backtester
+   - 12-month lookback window
+   - Quarterly rebalance
+   - Best strategy by Sharpe ratio
+        |
+        v
+   Portfolio Returns
+```
 
 ### Signal Families
 
 | Family | Variants | Description |
 |---|---|---|
-| **Momentum** | 2D – 256D (8) | Go long if past N-day return > 0 |
-| **Mean Reversion** | 2D – 256D (8) | Go short if past N-day return > 0 |
-| **MA Crossover** | 6 pairs | Long when short MA > long MA |
-| **Bollinger Band** | 20D, 50D | Long below lower band, short above upper |
-| **RSI** | 14D, 28D | Long when oversold (< 30), short when overbought (> 70) |
-| **Donchian Breakout** | 20D, 55D | Long on new high, short on new low |
+| **Momentum** | 20D, 30D, 60D, 120D, 200D | Go long if N-day return is positive, short otherwise |
+| **MA Crossover** | 6 pairs | Go long when fast MA crosses above slow MA |
+| **DXY (Dollar Index)** | 3 pairs | Go long on oil when the dollar is weakening |
 
-### Risk Management & Enhancements
+### Strategy Parameters
 
-- **Volatility Scaling (Risk Parity)**: Position size scaled inversely to 20-day realized volatility, targeting 15% annualized vol
-- **Top-N Ensembling**: Instead of picking a single winner, the top 3 strategies are equally weighted — smoothing returns and boosting Sharpe
-- **Regime Filter**: Momentum strategies only active in trending markets (price > 200 SMA); mean reversion only in sideways markets
-- **Minimum Holding Period**: 5-day minimum hold to prevent excessive signal flipping and reduce transaction costs
-- **Stop Loss / Take Profit**: -2% stop loss and +4% take profit per trade (2:1 reward-to-risk)
-- **Transaction Costs**: 1.5 bps per trade included in all backtests
+| Parameter | Value |
+|---|---|
+| Transaction Cost | 1.5 bps per trade |
+| Volatility Target | 15% annualized |
+| Stop Loss | -3% cumulative trade return |
+| Min Holding Period | 10 days |
+| Lookback Period | 12 months |
+| Rebalance Frequency | Quarterly |
 
 ---
 
-## Architecture
+## Key Findings from EDA
 
-```
-┌─────────────────────────────────────────────┐
-│              Raw Price Data                 │
-│           (Brent Crude - CO1)               │
-└──────────────────┬──────────────────────────┘
-                   │
-    ┌──────────────▼──────────────┐
-    │    26 Strategy Signals      │
-    │  (Momentum, MeanRev, MA,    │
-    │   Bollinger, RSI, Breakout) │
-    └──────────────┬──────────────┘
-                   │
-    ┌──────────────▼──────────────┐
-    │      Signal Filters         │
-    │  • Holding Period (5 day)   │
-    │  • Stop Loss / Take Profit  │
-    │  • Regime Filter            │
-    │  • Volatility Scaling       │
-    └──────────────┬──────────────┘
-                   │
-    ┌──────────────▼──────────────┐
-    │   Walkforward Backtester    │
-    │  • 24M lookback window      │
-    │  • 3M rebalance frequency   │
-    │  • Top-3 ensemble selection │
-    └──────────────┬──────────────┘
-                   │
-    ┌──────────────▼──────────────┐
-    │     Portfolio Returns       │
-    │    (Risk-Adjusted PnL)      │
-    └─────────────────────────────┘
-```
+- **Autocorrelation:** No significant daily return autocorrelation, so short-lookback strategies (1D, 5D, 10D) were dropped
+- **Volatility Clustering:** Extreme clustering confirmed the need for volatility-scaled position sizing
+- **Fat Tails:** Negative skew and high kurtosis justified the use of stop losses
+- **Mean Reversion:** Didn't work for crude oil (it's just the negation of momentum, no independent information)
+- **Seasonality:** No reliable monthly pattern found in 8 years of data
+- **DXY Signal:** Dollar index strategies contributed ~47% of the strategy's active time, providing genuine cross-asset diversification
+- **EIA Inventories:** Weak signal, not strong enough for standalone daily trading
+
+For the full analysis, see the [Strategy Report](Strategy_Report.md).
+
+---
+
+## Project Structure
+
+| File | Description |
+|---|---|
+| `learn.ipynb` | Main notebook: EDA, strategy construction, backtesting, and analysis |
+| `brent_index.xlsx` | Brent Crude Oil front-month futures price data |
+| `dxy.csv` | U.S. Dollar Index (DTWEXBGS) data from FRED |
+| `psw01.xls` | EIA Weekly Petroleum Status Report (inventory data) |
+| `Strategy_Report.md` | Detailed research report documenting methodology and findings |
+| `requirements.txt` | Python dependencies |
+| `equity_curve.png` | Exported equity curve chart |
+| `drawdown.png` | Exported drawdown chart |
+| `stoploss_sensitivity.png` | Exported stop-loss sensitivity chart |
+| `equity_curve.csv` | Daily portfolio cumulative returns |
 
 ---
 
 ## Quick Start
 
-### Requirements
+### 1. Set up the environment
 ```bash
-pip install pandas numpy plotly openpyxl nbformat matplotlib
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### Run
-Open `Sample Strategy.ipynb` in Jupyter or VS Code and run all cells.
-
----
-
-## Files
-
-| File | Description |
-|---|---|
-| `Sample Strategy.ipynb` | Main notebook with strategy code and backtester |
-| `brent_index.xlsx` | Brent crude oil price data (CO1 Comdty) |
-| `backtest.py` | Standalone backtester module |
+### 2. Run the notebook
+Open `learn.ipynb` in Jupyter or VS Code and run all cells.
 
 ---
 
 ## Future Improvements
 
-- [ ] Add crude oil **inventory signal** (EIA weekly data)
-- [ ] **Term structure** signal (contango/backwardation)
-- [ ] Optimize `min_hold`, `stop_loss`, `take_profit` via grid search
-- [ ] Walk-forward parameter optimization
+- [ ] Term structure signal (contango/backwardation)
+- [ ] WTI-Brent spread (inter-commodity arbitrage)
+- [ ] VIX-based regime filtering (risk-on/risk-off)
+- [ ] Grid search optimization for stop loss, min hold, and vol target
 - [ ] Multi-asset expansion (WTI, Natural Gas, Heating Oil)
 
 ---
